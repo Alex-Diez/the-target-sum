@@ -5,6 +5,7 @@
   "main": "index.js",
   "author": "Alex-Diez",
   "license": "MIT",
+  "homepage": "https://alex-diez.github.io/the-target-sum",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
