@@ -103,4 +103,21 @@ describe('target sum game', () => {
 
     expect(game.find('.success').exists()).toBe(false);
   });
+
+  test('numbers are not clickable when game finished', () => {
+    startGame();
+
+
+    numbers.at(0).simulate('click');
+    numbers.at(4).simulate('click');
+    numbers.at(5).simulate('click');
+
+    expect(game.find('.success').exists()).toBe(true);
+
+    numbers.at(1).simulate('click');
+
+    expect(contentOf(game.find('.clicked'))).toEqual(['1', '5', '6']);
+    expect(contentOf(game.find('.clicked'))).not.toContain('2');
+    expect(game.find('.failure').exists()).toBe(false);
+  });
 });

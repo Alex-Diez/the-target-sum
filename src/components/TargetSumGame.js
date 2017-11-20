@@ -1,11 +1,19 @@
 import React, {Component} from 'react';
 
+const GAME_STATE = {
+  NEW: 'new',
+  PLAYING: 'playing',
+  WIN: 'win',
+  LOST: 'lost'
+};
+
 export default class TargetSumGame extends Component {
   constructor(props) {
     super(props);
 
     this.props = props;
     this.state = {
+      gameState: GAME_STATE.NEW,
       selectedNumbers: [],
       points: 0
     };
@@ -19,26 +27,52 @@ export default class TargetSumGame extends Component {
     this.props.onRestart();
     const numbers = this.props.numberSource();
     const target = this.props.targetComputer(numbers);
-    this.setState({target: target, numbers: numbers, points: 0, selectedNumbers: []});
+    this.setState(
+      {
+        target: target,
+        numbers: numbers,
+        gameState: GAME_STATE.PLAYING,
+        selectedNumbers: [],
+        points: 0,
+      }
+    );
   }
 
   checkNumber(index, value) {
+    const computeNextState = (prevState) => {
+      const points = prevState.points + value;
+      let gameState;
+      if (points === prevState.target) {
+        gameState = GAME_STATE.WIN;
+      } else if (points >= prevState.target) {
+        gameState = GAME_STATE.LOST;
+      } else {
+        gameState = prevState.gameState;
+      }
+      const selectedNumbers = prevState.selectedNumbers.concat(index);
+      return {
+        gameState: gameState,
+        points: points,
+        selectedNumbers: selectedNumbers
+      };
+    };
     this.setState(
-      (prevState, props) => ({
-        points: prevState.points + value,
-        selectedNumbers: prevState.selectedNumbers.concat(index)
-      })
+      (prevState, props) => computeNextState(prevState)
     );
   }
 
   render() {
+    const isNumberClickable = (index) => {
+      return this.state.selectedNumbers.indexOf(index) === -1;
+    };
 
     const createNumberNode = (index, number) => {
       return (
         <Number
           key={index}
           value={number}
-          clickable={this.state.selectedNumbers.indexOf(index) === -1}
+          gameState={this.state.gameState}
+          clickable={isNumberClickable(index)}
           onCheck={() => this.checkNumber(index, number)}
         />
       )
@@ -49,7 +83,7 @@ export default class TargetSumGame extends Component {
 
     return (
       <div className='game'>
-        <TargetSum target={target} points={this.state.points}/>
+        <TargetSum target={target} gameState={this.state.gameState}/>
         <div className='challenge-numbers'>
           {numbers.map((num, index) => createNumberNode(index, num))}
         </div>
@@ -76,7 +110,7 @@ class Number extends Component {
   checkIn(e) {
     e.preventDefault();
 
-    if (this.props.clickable) {
+    if (this.props.clickable && this.props.gameState === GAME_STATE.PLAYING) {
       this.props.onCheck();
     }
   }
@@ -104,9 +138,9 @@ class TargetSum extends Component {
 
   render() {
     let stateClass;
-    if (this.props.target === this.props.points) {
+    if (this.props.gameState === GAME_STATE.WIN) {
       stateClass = 'target success';
-    } else if (this.props.target <= this.props.points) {
+    } else if (this.props.gameState === GAME_STATE.LOST) {
       stateClass = 'target failure';
     } else {
       stateClass = 'target';
